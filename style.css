@@ -773,3 +773,46 @@ body {
 .logout-link i {
     width: 14px;
 }
+
+.auth-divider {
+    display: flex;
+    align-items: center;
+    margin: 1.5rem 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+}
+
+.auth-divider::before,
+.auth-divider::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: var(--border);
+}
+
+.auth-divider span {
+    padding: 0 10px;
+}
+
+.google-submit {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 12px;
+    background: white !important;
+    color: #1f2937 !important;
+    font-weight: 600;
+    border: none;
+}
+
+.google-submit img {
+    width: 18px;
+    height: 18px;
+}
+
+.google-submit:hover {
+    background: #f3f4f6 !important;
+    transform: translateY(-1px);
+}

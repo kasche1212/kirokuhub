@@ -113,6 +113,20 @@ document.addEventListener('DOMContentLoaded', () => {
         authBtn.disabled = false;
     });
 
+    // Google Sign-in
+    const googleBtn = document.getElementById('google-btn');
+    if (googleBtn) {
+        googleBtn.onclick = async () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            try {
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                authError.innerText = error.message;
+                authError.classList.remove('hidden');
+            }
+        };
+    }
+
     // --- CLOUD SYNC LOGIC ---
     async function loadUserData() {
         if (!currentUser) return;
