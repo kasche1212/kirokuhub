@@ -1,9 +1,7 @@
 :root {
     --primary: #1E3A8A;
-    /* Deep Navy Blue */
     --primary-glow: rgba(30, 58, 138, 0.3);
     --bg-dark: #020617;
-    /* Midnight Navy */
     --bg-card: rgba(15, 23, 42, 0.8);
     --text-main: #f8fafc;
     --text-muted: #94a3b8;
@@ -14,6 +12,16 @@
     --sidebar-width: 260px;
     --card-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
     --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --glass-opacity: 0.8;
+}
+
+body.light-mode {
+    --bg-dark: #f1f5f9;
+    --bg-card: rgba(255, 255, 255, 0.9);
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --border: rgba(0, 0, 0, 0.08);
+    --card-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
 }
 
 * {
@@ -827,7 +835,173 @@ body {
     height: 18px;
 }
 
-.google-submit:hover {
-    background: #f3f4f6 !important;
-    transform: translateY(-1px);
+/* Settings Page Styling */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    padding: 1rem 0;
+}
+
+.settings-section {
+    background: var(--bg-card);
+    backdrop-filter: blur(12px);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1.5rem;
+    box-shadow: var(--card-shadow);
+}
+
+.settings-section h3 {
+    margin-bottom: 1.5rem;
+    font-size: 1.1rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    color: var(--primary);
+}
+
+.settings-option {
+    margin-bottom: 1.5rem;
+}
+
+.settings-option:last-child {
+    margin-bottom: 0;
+}
+
+.settings-option label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.settings-select,
+.settings-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--text-main);
+    outline: none;
+    font-size: 0.9rem;
+}
+
+body.light-mode .settings-select,
+body.light-mode .settings-input {
+    background: rgba(255, 255, 255, 1);
+}
+
+.theme-selector {
+    display: flex;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 5px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+}
+
+.theme-btn {
+    flex: 1;
+    padding: 8px;
+    border: none;
+    border-radius: 8px;
+    background: transparent;
+    color: var(--text-muted);
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    transition: var(--transition);
+}
+
+.theme-btn.active {
+    background: var(--primary);
+    color: white;
+}
+
+.theme-btn:hover:not(.active) {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-danger-outline {
+    background: transparent;
+    border: 1px solid var(--danger);
+    color: var(--danger);
+    padding: 8px 16px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: var(--transition);
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-danger-outline:hover {
+    background: var(--danger);
+    color: white;
+}
+
+.setting-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.setting-row label {
+    margin-bottom: 0;
+}
+
+.glass-preview {
+    height: 60px;
+    border-radius: 12px;
+    margin-top: 10px;
+    border: 1px solid var(--border);
+    background: var(--bg-card);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.data-stats {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 1.5rem;
+}
+
+.stat-box {
+    flex: 1;
+    background: rgba(255, 255, 255, 0.03);
+    padding: 10px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.stat-box .val {
+    display: block;
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--primary);
+}
+
+.stat-box .lab {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+}
+
+/* Adjustments for Glass Opacity */
+.sidebar,
+.glass-card,
+.settings-section,
+.modal-content,
+.top-header {
+    background: var(--bg-card) !important;
+    backdrop-filter: blur(12px) !important;
 }

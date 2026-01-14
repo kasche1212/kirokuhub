@@ -23,8 +23,111 @@ document.addEventListener('DOMContentLoaded', () => {
     // App State
     const state = {
         transactions: [],
-        inventory: []
+        inventory: [],
+        settings: {
+            language: 'en',
+            currency: 'MYR',
+            theme: 'dark', // 'dark', 'light', 'system'
+            glassOpacity: 0.8
+        }
     };
+
+    const translations = {
+        en: {
+            'nav-dashboard': 'Dashboard',
+            'nav-inventory': 'Inventory',
+            'nav-finance': 'Finance',
+            'nav-settings': 'Settings',
+            'total-profit': 'Total Profit',
+            'total-expense': 'Total Expense',
+            'low-stock': 'Low Stock',
+            'inventory-count': 'Inventory Items',
+            'recent-activity': 'Recent Activity',
+            'settings-profile': 'User Profile',
+            'settings-localization': 'Localization',
+            'settings-appearance': 'Appearance',
+            'settings-data': 'Data Center',
+            'label-name': 'Display Name',
+            'label-password': 'New Password',
+            'label-lang': 'System Language',
+            'label-currency': 'Currency',
+            'label-theme': 'Theme Mode',
+            'label-glass': 'Glass Depth',
+            'btn-update': 'Update Profile',
+            'btn-export': 'Export Backup (JSON)',
+            'btn-import': 'Import Data',
+            'theme-dark': 'Dark',
+            'theme-light': 'Light',
+            'theme-system': 'System',
+            'search-placeholder': 'Search SKU or Product Name...',
+            'add-product': 'Add Product',
+            'add-sale': 'Add Sale',
+            'add-expense': 'Add Expense',
+            'sku': 'SKU',
+            'product': 'Product',
+            'stock': 'Stock',
+            'price': 'Price',
+            'status': 'Status',
+            'action': 'Action',
+            'amount': 'Amount',
+            'date': 'Date',
+            'type': 'Type',
+            'description': 'Description'
+        },
+        cn: {
+            'nav-dashboard': '仪表盘',
+            'nav-inventory': '库存管理',
+            'nav-finance': '财务报表',
+            'nav-settings': '系统设置',
+            'total-profit': '总利润',
+            'total-expense': '总支出',
+            'low-stock': '低库存预警',
+            'inventory-count': '库存种类',
+            'recent-activity': '最近活动',
+            'settings-profile': '个人资料',
+            'settings-localization': '语言与货币',
+            'settings-appearance': '界面外观',
+            'settings-data': '数据中心',
+            'label-name': '显示名称',
+            'label-password': '新密码',
+            'label-lang': '系统语言',
+            'label-currency': '货币单位',
+            'label-theme': '主题模式',
+            'label-glass': '背景深度',
+            'btn-update': '更新资料',
+            'btn-export': '导出备份 (JSON)',
+            'btn-import': '导入数据',
+            'theme-dark': '深色',
+            'theme-light': '浅色',
+            'theme-system': '跟随系统',
+            'search-placeholder': '搜索 SKU 或 产品名称...',
+            'add-product': '添加产品',
+            'add-sale': '记录销售',
+            'add-expense': '记录支出',
+            'sku': 'SKU',
+            'product': '产品',
+            'stock': '库存',
+            'price': '价格',
+            'status': '状态',
+            'action': '操作',
+            'amount': '金额',
+            'date': '日期',
+            'type': '类型',
+            'description': '描述'
+        }
+    };
+
+    function t(key) {
+        return translations[state.settings.language][key] || key;
+    }
+
+    function updateI18n() {
+        document.querySelectorAll('[data-i18n]').forEach(el => {
+            const key = el.getAttribute('data-i18n');
+            el.innerText = t(key);
+        });
+        document.getElementById('search-input').placeholder = t('search-placeholder');
+    }
 
     const pageState = {
         dashboard: 0,
@@ -63,16 +166,20 @@ document.addEventListener('DOMContentLoaded', () => {
             appContainer.classList.remove('hidden');
 
             // Update User Profile UI
-            const name = user.email.split('@')[0].toUpperCase();
+            const name = user.displayName || user.email.split('@')[0].toUpperCase();
             displayNameEl.innerText = name;
             userAvatarEl.innerText = name.charAt(0);
 
             await loadUserData();
+            applyTheme(state.settings.theme);
+            applyGlass(state.settings.glassOpacity);
+            updateI18n();
             renderPage('dashboard');
         } else {
             currentUser = null;
             appContainer.classList.add('hidden');
             authScreen.classList.remove('hidden');
+            updateI18n();
             lucide.createIcons();
         }
     });
@@ -156,6 +263,27 @@ document.addEventListener('DOMContentLoaded', () => {
         };
     }
 
+    // --- THEME & STYLE ENGINE ---
+    function applyTheme(theme) {
+        state.settings.theme = theme;
+        document.body.classList.remove('light-mode');
+
+        if (theme === 'light') {
+            document.body.classList.add('light-mode');
+        } else if (theme === 'system') {
+            if (window.matchMedia('(prefers-color-scheme: light)').matches) {
+                document.body.classList.add('light-mode');
+            }
+        }
+        saveData();
+    }
+
+    function applyGlass(opacity) {
+        state.settings.glassOpacity = opacity;
+        document.documentElement.style.setProperty('--glass-opacity', opacity);
+        saveData();
+    }
+
     // --- CLOUD SYNC LOGIC ---
     async function loadUserData() {
         if (!currentUser) return;
@@ -165,6 +293,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 const data = doc.data();
                 state.inventory = data.inventory || [];
                 state.transactions = data.transactions || [];
+                if (data.settings) {
+                    state.settings = { ...state.settings, ...data.settings };
+                }
             }
         } catch (error) {
             console.error("Error loading data:", error);
@@ -174,13 +305,14 @@ document.addEventListener('DOMContentLoaded', () => {
     async function saveData() {
         if (!currentUser) return;
         try {
-            await db.collection('users').doc(currentUser.uid).set({
-                inventory: state.inventory,
-                transactions: state.transactions
-            });
+            await db.collection('users').doc(currentUser.uid).set(state);
         } catch (error) {
             console.error("Error saving data:", error);
         }
+    }
+
+    function formatCurrency(amount) {
+        return `${state.settings.currency} ${parseFloat(amount).toFixed(2)}`;
     }
 
     // --- CORE APP LOGIC (Updated for Cloud) ---
@@ -199,16 +331,14 @@ document.addEventListener('DOMContentLoaded', () => {
             totalExpense += (parseFloat(i.cost || 0) * totalPurchased);
         });
 
-        const profitEl = document.querySelector('.gold-gradient .value');
+        const profitEl = document.querySelector('.ocean-gradient .value');
         const expenseEl = document.querySelector('.sunset-gradient .value');
 
         if (profitEl) {
-            profitEl.innerText = `PHP ${totalProfit.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-            profitEl.style.color = 'var(--success)';
+            profitEl.innerText = formatCurrency(totalProfit);
         }
         if (expenseEl) {
-            expenseEl.innerText = `PHP ${totalExpense.toLocaleString('en-US', { minimumFractionDigits: 2 })}`;
-            expenseEl.style.color = 'var(--danger)';
+            expenseEl.innerText = formatCurrency(totalExpense);
         }
     }
 
@@ -243,11 +373,11 @@ document.addEventListener('DOMContentLoaded', () => {
             contentArea.innerHTML = `
                 <section class="page dashboard active">
                     <div class="stats-grid">
-                        <div class="stat-card gold-gradient">
+                        <div class="stat-card ocean-gradient">
                             <div class="stat-info">
-                                <h3>Total Profit</h3>
-                                <p class="value">PHP 0.00</p>
-                                <span class="trend up"><i data-lucide="trending-up"></i> Real-time</span>
+                                <h3 data-i18n="total-profit">${t('total-profit')}</h3>
+                                <p class="value">${formatCurrency(0)}</p>
+                                <span class="trend up"><i data-lucide="trending-up"></i> +12.5%</span>
                             </div>
                             <div class="stat-icon clickable" onclick="window.activeApp.showFilteredList('profit')" title="View all">
                                 <i data-lucide="wallet"></i>
@@ -255,28 +385,47 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                         <div class="stat-card sunset-gradient">
                             <div class="stat-info">
-                                <h3>Total Expense</h3>
-                                <p class="value">PHP 0.00</p>
+                                <h3 data-i18n="total-expense">${t('total-expense')}</h3>
+                                <p class="value">${formatCurrency(0)}</p>
                                 <span class="trend down"><i data-lucide="trending-down"></i> Based on Cost</span>
                             </div>
                             <div class="stat-icon clickable" onclick="window.activeApp.showFilteredList('expense')" title="View all">
                                 <i data-lucide="credit-card"></i>
                             </div>
                         </div>
+                        <div class="stat-card berry-gradient">
+                            <div class="stat-info">
+                                <h3 data-i18n="low-stock">${t('low-stock')}</h3>
+                                <p class="value">0</p>
+                                <span class="trend warn"><i data-lucide="alert-circle"></i> Requires attention</span>
+                            </div>
+                            <div class="stat-icon clickable" onclick="window.activeApp.showFilteredList('low-stock')" title="View all">
+                                <i data-lucide="package"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card forest-gradient">
+                            <div class="stat-info">
+                                <h3 data-i18n="inventory-count">${t('inventory-count')}</h3>
+                                <p class="value">0</p>
+                                <span class="trend up"><i data-lucide="box"></i> Active items</span>
+                            </div>
+                            <div class="stat-icon">
+                                <i data-lucide="database"></i>
+                            </div>
+                        </div>
                     </div>
                     <div class="chart-section glass-card">
                         <div class="chart-header">
-                            <h2>📊 Profit vs Expenses Overview</h2>
-                            <span class="chart-subtitle">Monthly comparison</span>
+                            <h2 data-i18n="recent-activity">📊 ${t('recent-activity')}</h2>
                         </div>
                         <div class="chart-container">
                             <canvas id="profitExpenseChart"></canvas>
                         </div>
                     </div>
                     <div class="recent-activity glass-card">
-                        <div class="card-header"><h2>Recent Activity</h2></div>
+                        <div class="card-header"><h2 data-i18n="recent-activity">${t('recent-activity')}</h2></div>
                         <table class="data-table">
-                            <thead><tr><th>Date</th><th>Detail</th><th>Category</th><th>Amount</th><th>Status</th></tr></thead>
+                            <thead><tr><th data-i18n="date">${t('date')}</th><th data-i18n="description">${t('description')}</th><th data-i18n="type">${t('type')}</th><th data-i18n="amount">${t('amount')}</th><th data-i18n="status">${t('status')}</th></tr></thead>
                             <tbody id="recent-transactions"></tbody>
                         </table>
                         <div id="dash-pagination"></div>
@@ -516,24 +665,98 @@ document.addEventListener('DOMContentLoaded', () => {
                 </section>
             `;
         } else if (page === 'settings') {
-            contentArea.innerHTML = `
-                <section class="page active">
-                    <div class="glass-card mb-2">
-                        <h2>Cloud Center</h2>
-                        <p>Your data is automatically synced to the cloud.</p>
+            renderSettings();
+        }
+    }
+
+    function renderSettings() {
+        const contentArea = document.querySelector('.main-content');
+        contentArea.innerHTML = `
+            <section class="page settings active">
+                <div class="settings-grid">
+                    <!-- Profile Setting -->
+                    <div class="settings-section">
+                        <h3 data-i18n="settings-profile"><i data-lucide="user"></i> ${t('settings-profile')}</h3>
+                        <div class="settings-option">
+                            <label data-i18n="label-name">${t('label-name')}</label>
+                            <input type="text" id="set-name" class="settings-input" value="${currentUser.displayName || currentUser.email.split('@')[0]}">
+                        </div>
+                        <div class="settings-option">
+                            <label data-i18n="label-password">${t('label-password')}</label>
+                            <input type="password" id="set-pass" class="settings-input" placeholder="••••••••">
+                        </div>
+                        <button class="btn-primary" onclick="window.activeApp.updateProfile()" data-i18n="btn-update" style="width:100%">${t('btn-update')}</button>
                     </div>
-                    <div class="stats-grid">
-                        <div class="glass-card" style="text-align:center; padding:2rem">
-                            <i data-lucide="shield-check" style="width:48px; height:48px; color:var(--success); margin-bottom:1rem"></i>
-                            <h3>Logged in as:</h3>
-                            <p>${currentUser.email}</p>
-                            <button class="btn-secondary mt-2" onclick="window.activeApp.logout()">Logout Securely</button>
+
+                    <!-- Localization Setting -->
+                    <div class="settings-section">
+                        <h3 data-i18n="settings-localization"><i data-lucide="globe"></i> ${t('settings-localization')}</h3>
+                        <div class="settings-option">
+                            <label data-i18n="label-lang">${t('label-lang')}</label>
+                            <select id="set-lang" class="settings-select" onchange="window.activeApp.changeLang(this.value)">
+                                <option value="en" ${state.settings.language === 'en' ? 'selected' : ''}>English</option>
+                                <option value="cn" ${state.settings.language === 'cn' ? 'selected' : ''}>简体中文</option>
+                            </select>
+                        </div>
+                        <div class="settings-option">
+                            <label data-i18n="label-currency">${t('label-currency')}</label>
+                            <select id="set-currency" class="settings-select" onchange="window.activeApp.changeCurrency(this.value)">
+                                ${['MYR', 'PHP', 'USD', 'SGD', 'IDR', 'THB', 'EUR', 'GBP', 'JPY', 'KRW'].map(c =>
+            `<option value="${c}" ${state.settings.currency === c ? 'selected' : ''}>${c}</option>`
+        ).join('')}
+                            </select>
                         </div>
                     </div>
-                </section>
-            `;
-            lucide.createIcons();
-        }
+
+                    <!-- Appearance Setting -->
+                    <div class="settings-section">
+                        <h3 data-i18n="settings-appearance"><i data-lucide="palette"></i> ${t('settings-appearance')}</h3>
+                        <div class="settings-option">
+                            <label data-i18n="label-theme">${t('label-theme')}</label>
+                            <div class="theme-selector">
+                                <button class="theme-btn ${state.settings.theme === 'dark' ? 'active' : ''}" onclick="window.activeApp.changeTheme('dark')">
+                                    <i data-lucide="moon"></i> <span data-i18n="theme-dark">${t('theme-dark')}</span>
+                                </button>
+                                <button class="theme-btn ${state.settings.theme === 'light' ? 'active' : ''}" onclick="window.activeApp.changeTheme('light')">
+                                    <i data-lucide="sun"></i> <span data-i18n="theme-light">${t('theme-light')}</span>
+                                </button>
+                                <button class="theme-btn ${state.settings.theme === 'system' ? 'active' : ''}" onclick="window.activeApp.changeTheme('system')">
+                                    <i data-lucide="monitor"></i> <span data-i18n="theme-system">${t('theme-system')}</span>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="settings-option">
+                            <div class="setting-row">
+                                <label data-i18n="label-glass">${t('label-glass')}</label>
+                                <span>${(state.settings.glassOpacity * 100).toFixed(0)}%</span>
+                            </div>
+                            <input type="range" class="settings-input" min="0.1" max="1" step="0.1" value="${state.settings.glassOpacity}" 
+                                oninput="window.activeApp.changeGlass(this.value)">
+                            <div class="glass-preview">Preview Box / 预览框</div>
+                        </div>
+                    </div>
+
+                    <!-- Data Center -->
+                    <div class="settings-section">
+                        <h3 data-i18n="settings-data"><i data-lucide="database"></i> ${t('settings-data')}</h3>
+                        <div class="data-stats">
+                            <div class="stat-box">
+                                <span class="val">${state.inventory.length}</span>
+                                <span class="lab" data-i18n="sku">Products</span>
+                            </div>
+                            <div class="stat-box">
+                                <span class="val">${state.transactions.length}</span>
+                                <span class="lab" data-i18n="action">Records</span>
+                            </div>
+                        </div>
+                        <button class="btn-primary mb-1" onclick="window.activeApp.exportData()" data-i18n="btn-export" style="width:100%">Export (JSON)</button>
+                        <button class="btn-danger-outline" onclick="document.getElementById('import-input').click()" data-i18n="btn-import">Import Backup</button>
+                        <input type="file" id="import-input" style="display:none" onchange="window.activeApp.importData(this)">
+                    </div>
+                </div>
+            </section>
+        `;
+        lucide.createIcons();
     }
 
     function renderTransactions() {
@@ -541,11 +764,11 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!tableBody) return;
         const startIdx = pageState.dashboard * ITEMS_PER_PAGE;
         const paginated = state.transactions.slice(startIdx, startIdx + ITEMS_PER_PAGE);
-        tableBody.innerHTML = paginated.map(t => `
+        tableBody.innerHTML = paginated.map(t_item => `
             <tr>
-                <td>${t.date}</td><td>${t.desc}</td><td>${t.category}</td>
-                <td style="color:${t.type === 'profit' ? 'var(--success)' : 'var(--danger)'}">${t.type === 'profit' ? '+' : '-'} PHP ${t.amount.toFixed(2)}</td>
-                <td><span class="status-badge ${t.type}">${t.type === 'profit' ? 'Profit' : 'Expense'}</span></td>
+                <td>${t_item.date}</td><td>${t_item.desc}</td><td>${t_item.category}</td>
+                <td style="color:${t_item.type === 'profit' ? 'var(--success)' : 'var(--danger)'}">${t_item.type === 'profit' ? '+' : '-'} ${formatCurrency(t_item.amount)}</td>
+                <td><span class="status-badge ${t_item.type}">${t_item.type === 'profit' ? 'Profit' : 'Expense'}</span></td>
             </tr>
         `).join('');
         document.getElementById('dash-pagination').innerHTML = renderPaginationControls('dash-pagination', state.transactions.length, pageState.dashboard, 'dashboard');
@@ -585,11 +808,25 @@ document.addEventListener('DOMContentLoaded', () => {
             type: 'bar',
             data: {
                 labels, datasets: [
-                    { label: 'Profit (PHP)', data: profitData, backgroundColor: pG, borderRadius: 8 },
-                    { label: 'Expenses (PHP)', data: expenseData, backgroundColor: eG, borderRadius: 8 }
+                    { label: `${t('total-profit')} (${state.settings.currency})`, data: profitData, backgroundColor: pG, borderRadius: 8 },
+                    { label: `${t('total-expense')} (${state.settings.currency})`, data: expenseData, backgroundColor: eG, borderRadius: 8 }
                 ]
             },
-            options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#fff' } } }, scales: { x: { ticks: { color: '#94a3b8' } }, y: { ticks: { color: '#94a3b8' } } } }
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: {
+                            color: state.settings.theme === 'light' ? '#64748b' : '#fff'
+                        }
+                    }
+                },
+                scales: {
+                    x: { ticks: { color: state.settings.theme === 'light' ? '#64748b' : '#94a3b8' } },
+                    y: { ticks: { color: state.settings.theme === 'light' ? '#64748b' : '#94a3b8' } }
+                }
+            }
         });
     }
 
@@ -651,6 +888,70 @@ document.addEventListener('DOMContentLoaded', () => {
         },
         logout: () => {
             auth.signOut();
+        },
+        exportData: () => {
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(state));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            downloadAnchorNode.setAttribute("download", `kirokuhub_backup_${new Date().toISOString().split('T')[0]}.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+        },
+        importData: (input) => {
+            const file = input.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const importedState = JSON.parse(e.target.result);
+                    if (importedState.transactions && importedState.inventory) {
+                        state.transactions = importedState.transactions;
+                        state.inventory = importedState.inventory;
+                        if (importedState.settings) state.settings = importedState.settings;
+                        await saveData();
+                        alert('Data imported successfully! The page will reload.');
+                        location.reload();
+                    }
+                } catch (err) { alert('Failed to parse data.'); }
+            };
+            reader.readAsText(file);
+        },
+        changeLang: (lang) => {
+            state.settings.language = lang;
+            updateI18n();
+            saveData();
+            renderSettings();
+        },
+        changeCurrency: (curr) => {
+            state.settings.currency = curr;
+            saveData();
+            renderSettings();
+            updateStats();
+        },
+        changeTheme: (theme) => {
+            applyTheme(theme);
+            renderSettings();
+        },
+        changeGlass: (val) => {
+            applyGlass(val);
+            renderSettings();
+        },
+        updateProfile: async () => {
+            const newName = document.getElementById('set-name').value;
+            const newPass = document.getElementById('set-pass').value;
+            try {
+                if (newName !== currentUser.displayName) {
+                    await currentUser.updateProfile({ displayName: newName });
+                    displayNameEl.innerText = newName.toUpperCase();
+                    userAvatarEl.innerText = newName.charAt(0).toUpperCase();
+                }
+                if (newPass) {
+                    await currentUser.updatePassword(newPass);
+                }
+                alert('Profile updated successfully!');
+                renderSettings();
+            } catch (err) { alert(err.message); }
         }
     };
 });
