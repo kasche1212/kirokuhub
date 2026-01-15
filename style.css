@@ -45,14 +45,13 @@ body {
     width: var(--sidebar-width);
     height: 100vh;
     position: fixed;
-    background: rgba(15, 23, 42, 0.9);
+    background: var(--bg-card);
     backdrop-filter: blur(12px);
     border-right: 1px solid var(--border);
     display: flex;
     flex-direction: column;
     padding: 2rem 1.2rem;
     z-index: 100;
-    background: var(--bg-card);
 }
 
 .logo {
@@ -81,6 +80,7 @@ body {
     text-decoration: none;
     border-radius: 10px;
     transition: var(--transition);
+    cursor: pointer;
 }
 
 .nav-item:hover,
@@ -136,7 +136,7 @@ body {
 .search-bar input {
     background: transparent;
     border: none;
-    color: white;
+    color: var(--text-main);
     outline: none;
     width: 100%;
 }
@@ -207,6 +207,7 @@ body {
     border: 1px solid var(--border);
     border-radius: 15px;
     padding: 1.5rem;
+    height: 100%;
 }
 
 .chart-container {
@@ -280,6 +281,10 @@ body {
     outline: none;
 }
 
+.settings-select option {
+    background: var(--bg-dark);
+}
+
 .theme-selector {
     display: flex;
     gap: 5px;
@@ -334,6 +339,28 @@ body {
     cursor: pointer;
     font-weight: 600;
     width: fit-content;
+}
+
+.btn-secondary {
+    background: transparent;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    padding: 6px 12px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 0.8rem;
+}
+
+.btn-xs {
+    background: transparent;
+    color: var(--text-muted);
+    border: none;
+    font-size: 1.2rem;
+    cursor: pointer;
+}
+
+.btn-xs:hover {
+    color: var(--danger);
 }
 
 .btn-danger-outline {
@@ -416,6 +443,16 @@ body {
 
 .hidden {
     display: none !important;
+}
+
+.automation-flex {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.flex-grow {
+    flex: 1;
 }
 
 @media (max-width: 768px) {
