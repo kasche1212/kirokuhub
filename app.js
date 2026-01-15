@@ -371,6 +371,24 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
         `;
 
+        // Auto-fill Listener
+        setTimeout(() => {
+            const skuIn = document.getElementById('in-sku');
+            if (skuIn) {
+                skuIn.addEventListener('input', (e) => {
+                    const val = e.target.value.trim();
+                    if (!val) return;
+                    // Find latest entry for this SKU
+                    const found = state.inventory.slice().reverse().find(i => i.sku === val);
+                    if (found) {
+                        document.getElementById('in-name').value = found.name;
+                        document.getElementById('in-cost').value = found.cost;
+                        document.getElementById('in-price').value = found.price;
+                    }
+                });
+            }
+        }, 100);
+
         document.getElementById('add-item-form').onsubmit = async (e) => {
             e.preventDefault();
             const dateVal = document.getElementById('in-date').value;
