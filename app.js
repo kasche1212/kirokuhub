@@ -274,7 +274,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 </div>
                 <div class="stat-card forest-gradient">
                     <div class="stat-info"><h3 data-i18n="inventory-count">${t('inventory-count')}</h3><p class="value">${uniqueItems}</p></div>
-                    <div class="stat-icon"><i data-lucide="database"></i></div>
+                    <div class="stat-icon" onclick="window.activeApp.showFiltered('inventory-summary')"><i data-lucide="database"></i></div>
                 </div>
             </div>
             <div class="chart-section glass-card mb-2">
@@ -577,11 +577,20 @@ document.addEventListener('DOMContentLoaded', () => {
             title = t('total-expense'); list = state.transactions.filter(t => t.type === 'stock-in');
         } else if (currentFilterType === 'low-stock') {
             title = t('low-stock'); list = state.inventory.filter(i => i.stock < 5).map(i => ({ ...i, amount: i.stock, desc: i.name, date: 'Alert' }));
+        } else if (currentFilterType === 'inventory-summary') {
+            title = t('inventory-count');
+            const grouped = {};
+            state.inventory.forEach(i => {
+                const s = i.sku || 'Unknown';
+                if (!grouped[s]) grouped[s] = { sku: s, desc: i.name, stock: 0, date: 'Total' };
+                grouped[s].stock += (parseInt(i.stock) || 0);
+            });
+            list = Object.values(grouped);
         }
         area.innerHTML = `
             <div class="glass-card mb-2"><div style="display:flex; justify-content:space-between"><h2>${title}</h2><button class="btn-secondary" onclick="window.activeApp.renderPage('dashboard')">Back</button></div></div>
-            <div class="glass-card"><table class="data-table"><thead><tr><th>${t('date')}</th><th>${t('sku')}</th><th>${t('desc')}</th><th>${currentFilterType === 'low-stock' ? 'Stock' : t('amount')}</th></tr></thead><tbody>
-                ${list.map(item => `<tr><td>${item.date}</td><td>${item.sku || '-'}</td><td>${item.desc}</td><td>${currentFilterType === 'low-stock' ? item.stock : formatCurrency(item.amount)}</td></tr>`).join('')}
+            <div class="glass-card"><table class="data-table"><thead><tr><th>${t('date')}</th><th>${t('sku')}</th><th>${t('desc')}</th><th>${(currentFilterType === 'low-stock' || currentFilterType === 'inventory-summary') ? 'Stock' : t('amount')}</th></tr></thead><tbody>
+                ${list.map(item => `<tr><td>${item.date}</td><td>${item.sku || '-'}</td><td>${item.desc}</td><td>${(currentFilterType === 'low-stock' || currentFilterType === 'inventory-summary') ? item.stock : formatCurrency(item.amount)}</td></tr>`).join('')}
             </tbody></table></div>
         `;
         lucide.createIcons();
