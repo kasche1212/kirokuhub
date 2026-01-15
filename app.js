@@ -113,6 +113,21 @@ document.addEventListener('DOMContentLoaded', () => {
         return `${state.settings.currency} ${parseFloat(amount || 0).toFixed(2)}`;
     }
 
+    function formatDateForDisplay(dateStr) {
+        if (!dateStr) return '-';
+        if (dateStr.match(/^\d{2}\/\d{2}\/\d{4}$/)) return dateStr;
+        if (dateStr.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            const [y, m, d] = dateStr.split('-');
+            return `${d}/${m}/${y}`;
+        }
+        // Legacy M/D/YYYY or similar
+        const parts = dateStr.split('/');
+        if (parts.length === 3) {
+            return `${parts[1].padStart(2, '0')}/${parts[0].padStart(2, '0')}/${parts[2]}`;
+        }
+        return dateStr;
+    }
+
     function updateI18nUI() {
         document.querySelectorAll('[data-i18n]').forEach(el => {
             const key = el.getAttribute('data-i18n');
@@ -331,7 +346,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${state.inventory.length === 0 ? `<tr><td colspan="8" align="center">${t('no-data')}</td></tr>` : ''}
                         ${state.inventory.map((item, idx) => `
                             <tr>
-                                <td>${item.date || '-'}</td>
+                                <td>${formatDateForDisplay(item.date)}</td>
                                 <td>${item.sku}</td><td>${item.name}</td>
                                 <td style="color:${item.stock < 5 ? 'var(--danger)' : 'inherit'}">${item.stock}</td>
                                 <td>${formatCurrency(item.cost)}</td><td>${formatCurrency(item.price)}</td>
@@ -394,7 +409,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         ${sales.map((item) => {
             const realIdx = state.transactions.indexOf(item);
             return `<tr>
-                                <td>${item.date}</td><td>${item.desc}</td>
+                                <td>${formatDateForDisplay(item.date)}</td><td>${item.desc}</td>
                                 <td style="color:var(--success)">+ ${formatCurrency(item.amount)}</td>
                                 <td><button class="btn-secondary" onclick="window.activeApp.deleteTransaction(${realIdx})" data-i18n="action">Delete</button></td>
                             </tr>`;
@@ -530,6 +545,7 @@ document.addEventListener('DOMContentLoaded', () => {
         deleteItem: async (idx) => {
             if (confirm(t('confirm-delete'))) {
                 const item = state.inventory[idx];
+                // Remove all related transactions to prevent ghost data
                 state.transactions = state.transactions.filter(t => t.sku !== item.sku);
                 state.inventory.splice(idx, 1);
                 await saveData(); renderInventory();
@@ -539,9 +555,23 @@ document.addEventListener('DOMContentLoaded', () => {
             if (confirm(t('confirm-delete'))) {
                 const txn = state.transactions[idx];
                 const item = state.inventory.find(i => i.sku === txn.sku);
-                if (item && txn.type === 'profit') item.stock += (txn.qty || 0);
+
+                if (item) {
+                    // Reverse the stock effect
+                    if (txn.type === 'profit') {
+                        // If it was a sale, add stock back
+                        item.stock += (txn.qty || 0);
+                    } else if (txn.type === 'stock-in') {
+                        // If it was a restock/initial, remove stock
+                        item.stock -= (txn.qty || 0);
+                        if (item.stock < 0) item.stock = 0; // Prevent negative stock
+                    }
+                }
+
                 state.transactions.splice(idx, 1);
                 await saveData();
+
+                // Refresh current view
                 if (document.getElementById('add-item-form')) renderInventory();
                 else if (document.getElementById('add-sale-form')) renderFinance();
                 else renderDashboard();
