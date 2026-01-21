@@ -443,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const dParts = dateVal.split('-');
             const formattedDate = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
-            state.inventory.push({ sku, name, source, stock, cost: parseFloat(cost.toFixed(2)), price, date: formattedDate });
+            state.inventory.unshift({ sku, name, source, stock, cost: parseFloat(cost.toFixed(2)), price, date: formattedDate });
             state.transactions.unshift({
                 id: Date.now(), date: formattedDate,
                 sku, desc: `Initial: ${name}`, qty: stock, type: 'stock-in', amount: (cost * stock), category: 'Stock'
