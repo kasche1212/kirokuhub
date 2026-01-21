@@ -504,14 +504,15 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="glass-card">
                 <table class="data-table">
-                     <thead><tr><th data-i18n="date">${t('date')}</th><th data-i18n="desc">${t('desc')}</th><th>Channel</th><th data-i18n="amount">${t('amount')}</th><th data-i18n="action">${t('action')}</th></tr></thead>
+                     <thead><tr><th data-i18n="date">${t('date')}</th><th data-i18n="desc">${t('desc')}</th><th>Qty</th><th>Channel</th><th data-i18n="amount">${t('amount')}</th><th data-i18n="action">${t('action')}</th></tr></thead>
                      <tbody>
-                        ${currentData.length === 0 ? `<tr><td colspan="5" align="center">${t('no-data')}</td></tr>` : ''}
+                        ${currentData.length === 0 ? `<tr><td colspan="6" align="center">${t('no-data')}</td></tr>` : ''}
                         ${currentData.map((item) => {
             const realIdx = state.transactions.indexOf(item);
             return `<tr>
                                 <td>${formatDateForDisplay(item.date)}</td>
                                 <td>${item.desc}</td>
+                                <td>${item.qty || '-'}</td>
                                 <td title="${item.channel || '-'}" style="max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${item.channel || '-'}</td>
                                 <td style="color:var(--success)">+ ${formatCurrency(item.amount)}</td>
                                 <td><button class="btn-secondary" onclick="window.activeApp.deleteTransaction(${realIdx})" data-i18n="action">Delete</button></td>
