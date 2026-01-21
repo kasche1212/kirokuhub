@@ -28,7 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
             language: 'en',
             currency: 'MYR',
             theme: 'dark',
-            glassOpacity: 0.8
+            glassOpacity: 0.8,
+            gradient: 'ocean'
         }
     };
 
@@ -146,6 +147,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyGlass(val) {
         document.documentElement.style.setProperty('--glass-opacity', val);
+    }
+
+    function applyGradient(gradient) {
+        const gradients = {
+            'ocean': 'linear-gradient(135deg, #1e3a8a 0%, #020617 100%)',
+            'sunset': 'linear-gradient(135deg, #f97316 0%, #581c87 100%)',
+            'forest': 'linear-gradient(135deg, #064e3b 0%, #020617 100%)',
+            'purple': 'linear-gradient(135deg, #7c3aed 0%, #1e1b4b 100%)',
+            'cherry': 'linear-gradient(135deg, #ec4899 0%, #581c87 100%)',
+            'midnight': 'linear-gradient(135deg, #1e40af 0%, #020617 100%)'
+        };
+        document.body.style.background = gradients[gradient] || gradients['ocean'];
     }
 
     async function saveData() {
@@ -610,6 +623,17 @@ document.addEventListener('DOMContentLoaded', () => {
                         <input type="range" min="0.1" max="1" step="0.1" value="${state.settings.glassOpacity}" 
                             oninput="window.activeApp.changeGlass(this.value)" class="w-full">
                     </div>
+                    <div class="settings-option">
+                        <label>Background Gradient</label>
+                        <div style="display:flex; gap:8px; flex-wrap:wrap; margin-top:8px">
+                            <button onclick="window.activeApp.changeGradient('ocean')" style="width:40px; height:40px; border-radius:8px; border:${state.settings.gradient === 'ocean' ? '3px solid white' : '1px solid var(--border)'}; background:linear-gradient(135deg, #1e3a8a, #020617); cursor:pointer" title="Ocean"></button>
+                            <button onclick="window.activeApp.changeGradient('sunset')" style="width:40px; height:40px; border-radius:8px; border:${state.settings.gradient === 'sunset' ? '3px solid white' : '1px solid var(--border)'}; background:linear-gradient(135deg, #f97316, #581c87); cursor:pointer" title="Sunset"></button>
+                            <button onclick="window.activeApp.changeGradient('forest')" style="width:40px; height:40px; border-radius:8px; border:${state.settings.gradient === 'forest' ? '3px solid white' : '1px solid var(--border)'}; background:linear-gradient(135deg, #064e3b, #020617); cursor:pointer" title="Forest"></button>
+                            <button onclick="window.activeApp.changeGradient('purple')" style="width:40px; height:40px; border-radius:8px; border:${state.settings.gradient === 'purple' ? '3px solid white' : '1px solid var(--border)'}; background:linear-gradient(135deg, #7c3aed, #1e1b4b); cursor:pointer" title="Purple"></button>
+                            <button onclick="window.activeApp.changeGradient('cherry')" style="width:40px; height:40px; border-radius:8px; border:${state.settings.gradient === 'cherry' ? '3px solid white' : '1px solid var(--border)'}; background:linear-gradient(135deg, #ec4899, #581c87); cursor:pointer" title="Cherry"></button>
+                            <button onclick="window.activeApp.changeGradient('midnight')" style="width:40px; height:40px; border-radius:8px; border:${state.settings.gradient === 'midnight' ? '3px solid white' : '1px solid var(--border)'}; background:linear-gradient(135deg, #1e40af, #020617); cursor:pointer" title="Midnight"></button>
+                        </div>
+                    </div>
                 </div>
                 <div class="settings-section">
                     <h3><i data-lucide="database"></i> ${t('settings-data')}</h3>
@@ -708,6 +732,7 @@ document.addEventListener('DOMContentLoaded', () => {
         changeCurrency: (v) => { state.settings.currency = v; saveData(); renderSettings(); renderDashboard(); },
         changeTheme: (v) => { state.settings.theme = v; applyTheme(v); saveData(); renderSettings(); },
         changeGlass: (v) => { state.settings.glassOpacity = v; applyGlass(v); saveData(); renderSettings(); },
+        changeGradient: (v) => { state.settings.gradient = v; applyGradient(v); saveData(); renderSettings(); },
         updateProfile: async () => {
             const n = document.getElementById('set-name').value;
             const p = document.getElementById('set-pass').value;
@@ -739,7 +764,7 @@ document.addEventListener('DOMContentLoaded', () => {
             currentUser = user;
             document.getElementById('auth-screen').classList.add('hidden');
             await loadUserData();
-            applyTheme(state.settings.theme); applyGlass(state.settings.glassOpacity);
+            applyTheme(state.settings.theme); applyGlass(state.settings.glassOpacity); applyGradient(state.settings.gradient || 'ocean');
             const name = user.displayName || user.email.split('@')[0];
             const nameEl = document.getElementById('display-name');
             if (nameEl) nameEl.innerText = name.toUpperCase();
