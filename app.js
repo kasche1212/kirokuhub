@@ -341,6 +341,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="date" id="in-date" value="${today}" class="settings-input" style="max-width:140px">
                     <input type="text" id="in-sku" placeholder="${t('sku')}" required class="settings-input flex-grow">
                     <input type="text" id="in-name" placeholder="${t('product')}" required class="settings-input flex-grow">
+                    <input type="text" id="in-source" placeholder="Source" class="settings-input" style="width:120px">
                     <input type="number" id="in-stock" placeholder="${t('stock')}" class="settings-input" style="width:80px">
                     <input type="number" id="in-cost" placeholder="${t('cost')}" class="settings-input" style="width:100px">
                     <input type="number" id="in-price" placeholder="${t('price')}" class="settings-input" style="width:100px">
@@ -349,14 +350,15 @@ document.addEventListener('DOMContentLoaded', () => {
             </div>
             <div class="glass-card">
                 <table class="data-table">
-                    <thead><tr><th data-i18n="date">${t('date')}</th><th data-i18n="sku">${t('sku')}</th><th data-i18n="product">${t('product')}</th><th data-i18n="stock">${t('stock')}</th><th data-i18n="cost">${t('cost')}</th><th data-i18n="price">${t('price')}</th><th data-i18n="profit">${t('profit')}</th><th data-i18n="action">${t('action')}</th></tr></thead>
+                    <thead><tr><th data-i18n="date">${t('date')}</th><th data-i18n="sku">${t('sku')}</th><th data-i18n="product">${t('product')}</th><th>Source</th><th data-i18n="stock">${t('stock')}</th><th data-i18n="cost">${t('cost')}</th><th data-i18n="price">${t('price')}</th><th data-i18n="profit">${t('profit')}</th><th data-i18n="action">${t('action')}</th></tr></thead>
                     <tbody>
-                        ${currentData.length === 0 ? `<tr><td colspan="8" align="center">${t('no-data')}</td></tr>` : ''}
+                        ${currentData.length === 0 ? `<tr><td colspan="9" align="center">${t('no-data')}</td></tr>` : ''}
                         ${currentData.map((item, idx) => {
             const realIdx = start + idx;
             return `<tr>
                                 <td>${formatDateForDisplay(item.date)}</td>
                                 <td>${item.sku}</td><td>${item.name}</td>
+                                <td>${item.source || '-'}</td>
                                 <td style="color:${item.stock < 5 ? 'var(--danger)' : 'inherit'}">${item.stock}</td>
                                 <td>${formatCurrency(item.cost)}</td><td>${formatCurrency(item.price)}</td>
                                 <td style="color:var(--success)">${formatCurrency(item.price - item.cost)}</td>
@@ -385,6 +387,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         document.getElementById('in-name').value = found.name;
                         document.getElementById('in-cost').value = found.cost;
                         document.getElementById('in-price').value = found.price;
+                        document.getElementById('in-source').value = found.source || '';
                     }
                 });
             }
@@ -395,12 +398,13 @@ document.addEventListener('DOMContentLoaded', () => {
             const dateVal = document.getElementById('in-date').value;
             const sku = document.getElementById('in-sku').value;
             const name = document.getElementById('in-name').value;
+            const source = document.getElementById('in-source').value || '-';
             const stock = parseInt(document.getElementById('in-stock').value) || 0;
             const cost = parseFloat(document.getElementById('in-cost').value) || 0;
             const price = parseFloat(document.getElementById('in-price').value) || 0;
             const dParts = dateVal.split('-');
             const formattedDate = `${dParts[2]}/${dParts[1]}/${dParts[0]}`;
-            state.inventory.push({ sku, name, stock, cost, price, date: formattedDate });
+            state.inventory.push({ sku, name, source, stock, cost, price, date: formattedDate });
             state.transactions.unshift({
                 id: Date.now(), date: formattedDate,
                 sku, desc: `Initial: ${name}`, qty: stock, type: 'stock-in', amount: (cost * stock), category: 'Stock'
