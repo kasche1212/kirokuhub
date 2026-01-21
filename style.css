@@ -238,6 +238,10 @@ body {
     padding: 12px;
     border-bottom: 1px solid var(--border);
     font-size: 0.9rem;
+    max-width: 150px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 /* Settings */

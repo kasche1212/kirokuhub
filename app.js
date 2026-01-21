@@ -358,7 +358,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<tr>
                                 <td>${formatDateForDisplay(item.date)}</td>
                                 <td>${item.sku}</td><td>${item.name}</td>
-                                <td>${item.source || '-'}</td>
+                                <td title="${item.source || '-'}">${item.source || '-'}</td>
                                 <td style="color:${item.stock < 5 ? 'var(--danger)' : 'inherit'}">${item.stock}</td>
                                 <td>${formatCurrency(item.cost)}</td><td>${formatCurrency(item.price)}</td>
                                 <td style="color:var(--success)">${formatCurrency(item.price - item.cost)}</td>
