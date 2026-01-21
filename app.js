@@ -445,7 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </select>
                     <input type="number" id="s-price" placeholder="Price" class="settings-input" style="width:100px">
                     <input type="number" id="s-qty" placeholder="Qty" class="settings-input" style="width:80px">
-                    <select id="s-channel" class="settings-select" style="width:120px">
+                    <select id="s-channel" class="settings-select" style="width:120px" onchange="document.getElementById('s-channel-other').style.display = this.value === 'Other' ? 'block' : 'none'">
                         <option value="Shopee">Shopee</option>
                         <option value="Lazada">Lazada</option>
                         <option value="TikTok">TikTok</option>
@@ -454,6 +454,7 @@ document.addEventListener('DOMContentLoaded', () => {
                         <option value="Offline">Offline</option>
                         <option value="Other">Other</option>
                     </select>
+                    <input type="text" id="s-channel-other" placeholder="Channel name" class="settings-input" style="width:100px; display:none">
                     <button class="btn-primary" data-i18n="add-sale">${t('add-sale')}</button>
                 </form>
             </div>
@@ -467,7 +468,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return `<tr>
                                 <td>${formatDateForDisplay(item.date)}</td>
                                 <td>${item.desc}</td>
-                                <td>${item.channel || '-'}</td>
+                                <td title="${item.channel || '-'}" style="max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap">${item.channel || '-'}</td>
                                 <td style="color:var(--success)">+ ${formatCurrency(item.amount)}</td>
                                 <td><button class="btn-secondary" onclick="window.activeApp.deleteTransaction(${realIdx})" data-i18n="action">Delete</button></td>
                             </tr>`;
@@ -504,7 +505,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (!sku || !qty || !sellPrice) return alert("Select Product, Price and Quantity");
             const item = state.inventory.find(i => i.sku === sku);
-            const channel = document.getElementById('s-channel').value;
+            let channel = document.getElementById('s-channel').value;
+            if (channel === 'Other') {
+                channel = document.getElementById('s-channel-other').value || 'Other';
+            }
             if (item) {
                 if (item.stock < qty) return alert("Not enough stock!");
                 item.stock -= qty;
