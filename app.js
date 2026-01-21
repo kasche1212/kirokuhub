@@ -341,31 +341,34 @@ document.addEventListener('DOMContentLoaded', () => {
                     <input type="date" id="in-date" value="${today}" class="settings-input" style="max-width:140px">
                     <input type="text" id="in-sku" placeholder="${t('sku')}" required class="settings-input flex-grow">
                     <input type="text" id="in-name" placeholder="${t('product')}" required class="settings-input flex-grow">
-                    <input type="text" id="in-source" placeholder="Source" class="settings-input" style="width:120px">
                     <input type="number" id="in-stock" placeholder="${t('stock')}" class="settings-input" style="width:80px">
                     <input type="number" id="in-cost" placeholder="${t('cost')}" class="settings-input" style="width:100px">
                     <input type="number" id="in-price" placeholder="${t('price')}" class="settings-input" style="width:100px">
+                    <input type="text" id="in-source" placeholder="Source" class="settings-input" style="width:120px">
                     <button class="btn-primary" data-i18n="add-product">${t('add-product')}</button>
                 </form>
             </div>
             <div class="glass-card">
                 <table class="data-table">
-                    <thead><tr><th data-i18n="date">${t('date')}</th><th data-i18n="sku">${t('sku')}</th><th data-i18n="product">${t('product')}</th><th>Source</th><th data-i18n="stock">${t('stock')}</th><th data-i18n="cost">${t('cost')}</th><th data-i18n="price">${t('price')}</th><th data-i18n="profit">${t('profit')}</th><th data-i18n="action">${t('action')}</th></tr></thead>
+                    <thead><tr><th data-i18n="date">${t('date')}</th><th data-i18n="sku">${t('sku')}</th><th data-i18n="product">${t('product')}</th><th data-i18n="stock">${t('stock')}</th><th data-i18n="cost">${t('cost')}</th><th data-i18n="price">${t('price')}</th><th>Source</th><th data-i18n="profit">${t('profit')}</th><th data-i18n="action">${t('action')}</th></tr></thead>
                     <tbody>
                         ${currentData.length === 0 ? `<tr><td colspan="9" align="center">${t('no-data')}</td></tr>` : ''}
                         ${currentData.map((item, idx) => {
             const realIdx = start + idx;
+            const sourceDisplay = item.source && item.source.startsWith('http')
+                ? `<a href="${item.source}" target="_blank" style="color:var(--primary)">Link</a>`
+                : (item.source || '-');
+            const copyBtn = item.source && item.source !== '-'
+                ? `<button class="btn-xs" onclick="navigator.clipboard.writeText('${item.source.replace(/'/g, "\\'").replace(/"/g, '&quot;')}'); alert('Copied!')" title="Copy" style="margin-left:5px">📋</button>`
+                : '';
             return `<tr>
                                 <td>${formatDateForDisplay(item.date)}</td>
-                                <td>${item.sku}</td><td>${item.name}</td>
-                                <td title="${item.source || '-'}" style="display:flex; align-items:center; gap:5px;">
-                                    ${item.source && item.source.startsWith('http')
-                    ? `<a href="${item.source}" target="_blank" style="color:var(--primary); max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">Link</a>`
-                    : `<span style="max-width:100px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;">${item.source || '-'}</span>`}
-                                    ${item.source && item.source !== '-' ? `<button class="btn-xs" onclick="navigator.clipboard.writeText('${item.source.replace(/'/g, "\\'")}'); alert('Copied!')" title="Copy">📋</button>` : ''}
-                                </td>
+                                <td>${item.sku}</td>
+                                <td>${item.name}</td>
                                 <td style="color:${item.stock < 5 ? 'var(--danger)' : 'inherit'}">${item.stock}</td>
-                                <td>${formatCurrency(item.cost)}</td><td>${formatCurrency(item.price)}</td>
+                                <td>${formatCurrency(item.cost)}</td>
+                                <td>${formatCurrency(item.price)}</td>
+                                <td title="${item.source || '-'}">${sourceDisplay}${copyBtn}</td>
                                 <td style="color:var(--success)">${formatCurrency(item.price - item.cost)}</td>
                                 <td><button class="btn-secondary" onclick="window.activeApp.deleteItem(${realIdx})" data-i18n="action">Delete</button></td>
                             </tr>`;
